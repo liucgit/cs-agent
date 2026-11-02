@@ -49,6 +49,7 @@
         div.textContent = text;
         chat.appendChild(div);
         chat.scrollTop = chat.scrollHeight;
+        return div; // 必须返回气泡节点，否则发送后无法把"思考中"替换为正式回复
     }
 
     async function send() {
