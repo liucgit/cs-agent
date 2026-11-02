@@ -6,6 +6,7 @@ com\demo\cs\ticket\Ticket.class
 com\demo\cs\config\AgentConfig.class
 com\demo\cs\config\AppProperties$Mcp.class
 com\demo\cs\web\ChatController.class
+com\demo\cs\web\GlobalExceptionHandler.class
 com\demo\cs\CsAgentApplication.class
 com\demo\cs\ticket\TicketRepository.class
 com\demo\cs\memory\RedisChatMemoryStore.class
