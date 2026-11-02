@@ -1,0 +1,26 @@
+# ==============================================================================
+# 可选组件一键拉起：Redis（ChatMemory 持久化）
+# 使用前提：本机安装了 Docker Desktop
+# 启动：  docker compose up -d
+# 停止：  docker compose down
+# 说明：不启动 Redis 也能运行本项目——RedisChatMemoryStore 会自动降级为
+#       进程内记忆（重启丢失，功能不受影响）。想体验/演示"Redis 持久化记忆"
+#       （简历方案）时再拉起本文件。
+# ==============================================================================
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: cs-agent-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]   # 开 AOF 持久化
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  redis_data:

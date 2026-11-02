@@ -1,0 +1,57 @@
+# ==============================================================================
+# 智能客服 Agent 配置
+# ==============================================================================
+server:
+  port: 8081
+
+spring:
+  application:
+    name: cs-agent
+  datasource:
+    # H2 内嵌数据库（文件模式：数据落在 ./data/csagent，重启不丢）
+    # 生产环境换成 MySQL 只需要改这里的 url/driver + 加 mysql 依赖
+    url: jdbc:h2:file:./data/csagent;MODE=MySQL;AUTO_SERVER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: update     # 学习项目用 update 自动建表；生产必须用 validate + 迁移脚本
+    open-in-view: false    # 关闭 OSIV：事务边界更清晰（好习惯）
+  h2:
+    console:
+      enabled: true        # 浏览器访问 http://localhost:8081/h2-console 可直接查工单表
+      path: /h2-console
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      # Redis 连不上时应用照常启动，记忆自动降级为进程内存（见 RedisChatMemoryStore）
+
+app:
+  # ---------- 对话大模型 ----------
+  llm:
+    provider: ollama                 # ollama | deepseek | qwen
+    model: qwen2.5:7b
+    base-url: ""
+    api-key: ""                      # 也可用环境变量 DEEPSEEK_API_KEY / DASHSCOPE_API_KEY
+    temperature: 0.3
+    timeout-seconds: 120
+    max-tokens: 2048
+
+  # ---------- 会话记忆 ----------
+  memory:
+    max-messages: 20                 # 每个会话保留的最近消息条数（滑动窗口）
+    ttl-days: 7                      # Redis 中会话记忆的过期时间
+
+  # ---------- MCP 知识库接入 ----------
+  mcp:
+    # true = 通过 MCP 协议连接 kb-mcp-server（需先启动 E:\Workspaces\kb-mcp-server）
+    # false = 不接知识库，Agent 只用工单工具
+    enabled: true
+    sse-url: http://localhost:8082/sse
+
+logging:
+  level:
+    com.demo.cs: INFO
+    dev.langchain4j: INFO            # 想看 Function Calling 的原始报文，改成 DEBUG

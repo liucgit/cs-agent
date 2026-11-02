@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  智能客服 Agent（Spring Boot + LangChain4j + Redis + MCP）
+
+  给转型同学的话：
+  - 这是「Agent vs 工作流」的样板项目：Agent = LLM(决策) + Tools(改外部世界)
+    + Memory(跨轮次记忆) + Controller(控制流)。本项目的 LLM 决策、工具选择、
+    多轮记忆全部由 LangChain4j 的 AI Services 驱动，你可以清楚看到
+    "Function Calling 是怎么把自然语言变成一次 Java 方法调用的"。
+  - 与项目一的区别：项目一是固定链路的 RAG 工作流；本项目把 RAG(知识库)
+    通过 MCP 协议远程接入，把工单系统通过 Tool Calling 本地接入，
+    LLM 自己决定"该查知识库、该查工单、还是该建工单"。
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.3</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.demo</groupId>
+    <artifactId>cs-agent</artifactId>
+    <version>1.0.0</version>
+    <name>cs-agent</name>
+    <description>智能客服 Agent：AI Services 注解式接口 + Redis 持久化多会话记忆 + Tool Calling 工单 + MCP 知识库</description>
+
+    <properties>
+        <java.version>17</java.version>
+        <langchain4j.version>1.0.1</langchain4j.version>
+    </properties>
+
+    <!-- ============ LangChain4j ============ -->
+    <!-- BOM 统一管理 langchain4j 各模块版本，避免模块间版本不一致 -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>dev.langchain4j</groupId>
+                <artifactId>langchain4j-bom</artifactId>
+                <version>${langchain4j.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <!-- ============ Spring Boot 基础 ============ -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <!-- JPA + H2：工单数据用内嵌 H2 存储（零安装），生产可无缝换 MySQL -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- Redis：ChatMemory 持久化（可选组件，连不上自动降级为内存记忆） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-open-ai</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-ollama</artifactId>
+        </dependency>
+        <!-- MCP 客户端：让 Agent 通过 MCP 协议远程调用知识库工具 -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-mcp</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

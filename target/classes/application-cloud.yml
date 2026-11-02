@@ -1,0 +1,22 @@
+# ============================================================================
+# 云端模式配置（Profile: cloud）—— 对话模型走 DeepSeek，无需本地 Ollama
+# ----------------------------------------------------------------------------
+# 用法：
+#   java -jar target\cs-agent-1.0.0.jar --spring.profiles.active=cloud
+#   或在 IDE 的 Run Configuration 里把 Active profiles 设为 cloud
+#
+# 需要提前设置的环境变量：
+#   DEEPSEEK_API_KEY   https://platform.deepseek.com 申请
+#   （PowerShell）$env:DEEPSEEK_API_KEY="sk-xxx"  /  永久：setx DEEPSEEK_API_KEY "sk-xxx"
+#
+# 注意：DeepSeek 旧模型名 deepseek-chat / deepseek-reasoner 已于 2026-07-24 停用，
+# 现行名称是 deepseek-flash（1M 上下文、支持 Tool Calling）。
+# ============================================================================
+app:
+  llm:
+    provider: deepseek
+    base-url: https://api.deepseek.com
+    model: deepseek-flash
+    temperature: 0.3          # 客服场景偏低温度：话术稳定、不乱承诺
+    max-tokens: 1024
+    timeout-seconds: 60
