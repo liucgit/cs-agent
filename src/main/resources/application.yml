@@ -49,7 +49,10 @@ app:
     # true = 通过 MCP 协议连接 kb-mcp-server（需先启动 E:\Workspaces\kb-mcp-server）
     # false = 不接知识库，Agent 只用工单工具
     enabled: true
-    sse-url: http://localhost:8082/sse
+    # Streamable HTTP 单一端点（MCP 2025-03-26 规范）。
+    # 旧版是 sse-url: http://localhost:8082/sse（HTTP+SSE 双端点），官方已弃用。
+    url: http://localhost:8082/mcp
+    timeout-seconds: 60
 
 logging:
   level:

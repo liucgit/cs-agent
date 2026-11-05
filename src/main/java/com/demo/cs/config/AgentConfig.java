@@ -7,12 +7,14 @@ import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.mcp.client.transport.McpTransport;
-import dev.langchain4j.mcp.client.transport.http.HttpMcpTransport;
+import dev.langchain4j.mcp.client.transport.http.StreamableHttpMcpTransport;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
 import dev.langchain4j.service.AiServices;
+import dev.langchain4j.service.tool.ToolArgumentsErrorHandler;
+import dev.langchain4j.service.tool.ToolExecutionErrorHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -111,14 +113,21 @@ public class AgentConfig {
                         .maxMessages(props.getMemory().getMaxMessages())
                         .chatMemoryStore(memoryStore)
                         .build())
-                .tools(ticketTools); // 本地工具：工单查询/创建
+                .tools(ticketTools) // 本地工具：工单查询/创建
+                // 工具出错时的显式策略（LangChain4j 1.23 起要求显式声明，默认值未来会变）：
+                //  ① 参数错误：把异常文本回给 LLM，让它自己改参数重试——这是 Function Calling
+                //     最常见的失败模式（模型把 "E1002" 写成 "1002"），重试比直接失败体验好；
+                //  ② 执行错误：只回一句通用话术，不把堆栈/DB 地址/SQL 泄露给模型和会话记忆。
+                .toolArgumentsErrorHandler(ToolArgumentsErrorHandler.sendExceptionMessageToLlm())
+                .toolExecutionErrorHandler(ToolExecutionErrorHandler
+                        .sendGenericMessageToLlmUnlessVisibleToLlm("工单服务暂时不可用，请稍后再试"));
 
         // 远程工具：通过 MCP 协议接入知识库（可选）
         if (props.getMcp().isEnabled()) {
             McpToolProvider mcpProvider = buildMcpProvider(props);
             if (mcpProvider != null) {
                 builder.toolProvider(mcpProvider);
-                log.info("已接入 MCP 知识库工具: {}", props.getMcp().getSseUrl());
+                log.info("已接入 MCP 知识库工具: {}", props.getMcp().getUrl());
             }
         }
         return builder.build();
@@ -130,17 +139,23 @@ public class AgentConfig {
      * <p>McpToolProvider 与 @Tool 的关系：两者都是"给 LLM 提供工具"，
      * 区别是 @Tool 是本进程的 Java 方法，McpToolProvider 背后是【另一个进程/服务】——
      * 框架会先向 MCP Server 调 tools/list 拿到远程工具说明书，转交给 LLM；
-     * LLM 决定调用时再经 MCP 协议转发 tools/call。failIfOneToolFails(false)
+     * LLM 决定调用时再经 MCP 协议转发 tools/call。failIfOneServerFails(false)
      * 表示单个工具失败不拖垮整轮对话（降级思维再次出现）。</p>
+     *
+     * <p><b>传输方式：Streamable HTTP</b>（MCP 2025-03-26 规范引入，已在主流客户端/服务端普及）。
+     * 与旧的 HTTP+SSE 双端点方案相比，它只用一个端点（这里是 /mcp）：
+     * 客户端 POST JSON-RPC，服务端可以用普通 JSON 直接应答，也可以升级成 SSE 流分块推送；
+     * 会话状态通过 Mcp-Session-Id 头传递，不再需要长连接维持"消息回传通道"。
+     * 因此不再需要心跳保活，也不会因为 SSE 长连接空闲超时而反复重连。</p>
      */
     private McpToolProvider buildMcpProvider(AppProperties props) {
         try {
-            McpTransport transport = new HttpMcpTransport.Builder()
-                    .sseUrl(props.getMcp().getSseUrl())
-                    // 该 timeout 会被 okhttp 用作 SSE 长连接的读超时：
-                    // 太短（如 10 秒）会在链路空闲时触发 SocketTimeoutException 并反复重连。
-                    // kb-mcp-server 每 5 秒发一次 SSE 心跳注释行保活，60 秒是双保险。
-                    .timeout(Duration.ofSeconds(60))
+            // 只需一个 URL：没有 sse-url / message-endpoint 的配对关系了
+            McpTransport transport = new StreamableHttpMcpTransport.Builder()
+                    .url(props.getMcp().getUrl())
+                    // 单次 HTTP 交互的超时（含 initialize 与 tools/call），
+                    // 不是"长连接读超时"，所以不需要为了保活而放大
+                    .timeout(Duration.ofSeconds(props.getMcp().getTimeoutSeconds()))
                     .logRequests(true)   // 打印 MCP 协议报文，学习期强烈建议开着
                     .logResponses(true)
                     .build();

@@ -53,11 +53,18 @@ public class AppProperties {
 
     public static class Mcp {
         private boolean enabled = true;
-        private String sseUrl = "http://localhost:8082/sse";
+        /**
+         * MCP Server 的 Streamable HTTP 端点（单一 URL，不再区分 sse-url 与 message-endpoint）。
+         */
+        private String url = "http://localhost:8082/mcp";
+        /** 单次 MCP 交互（initialize / tools/call）的 HTTP 超时秒数。 */
+        private int timeoutSeconds = 60;
 
         public boolean isEnabled() { return enabled; }
         public void setEnabled(boolean enabled) { this.enabled = enabled; }
-        public String getSseUrl() { return sseUrl; }
-        public void setSseUrl(String sseUrl) { this.sseUrl = sseUrl; }
+        public String getUrl() { return url; }
+        public void setUrl(String url) { this.url = url; }
+        public int getTimeoutSeconds() { return timeoutSeconds; }
+        public void setTimeoutSeconds(int timeoutSeconds) { this.timeoutSeconds = timeoutSeconds; }
     }
 }

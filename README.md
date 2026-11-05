@@ -38,7 +38,7 @@
 
 ```
 cs-agent/
-├── pom.xml                        # Spring Boot 3.5 + LangChain4j 1.0.1 + Redis + H2
+├── pom.xml                        # Spring Boot 3.5 + LangChain4j 1.23.0 + Redis + H2
 ├── docker-compose.yml             # 可选：一键拉起 Redis（不启动也能跑，自动降级）
 └── src/main/
     ├── resources/
@@ -134,7 +134,8 @@ java -jar target\cs-agent-1.0.0.jar --spring.profiles.active=cloud
 ## 七、编译验证结论与已知限制
 
 - **编译验证**：已用 Maven 3.9.9 + JDK 26（`--release 17`）完成 `mvn clean compile` 与 `mvn package` 全量验证，BUILD SUCCESS；产出 `target/cs-agent-1.0.0.jar` 可直接 `java -jar` 运行。
-- LangChain4j `1.0.1`（BOM，其中 langchain4j-mcp 为 `1.0.1-beta6`）+ Spring Boot `3.5.3`。本版本实际 API 已核实并在代码注释中说明：`McpClient` 是接口（用 `new DefaultMcpClient.Builder()` 构建）、`ChatMemoryStore` 位于 `dev.langchain4j.store.memory.chat` 包且只有 getMessages/updateMessages/deleteMessages 三个方法。
-- 若后续升级 LangChain4j 大版本，`HttpMcpTransport` / `McpToolProvider` 构造 API 可能变化，按新版 Javadoc 调整 `AgentConfig.buildMcpProvider` 即可。
+- LangChain4j `1.23.0`（BOM，其中 langchain4j-mcp 为 `1.23.0-beta33`）+ Spring Boot `3.5.3`。本版本实际 API 已核实并在代码注释中说明：`McpClient` 是接口（用 `new DefaultMcpClient.Builder()` 构建）、`ChatMemoryStore` 位于 `dev.langchain4j.store.memory.chat` 包且只有 getMessages/updateMessages/deleteMessages 三个方法。
+- **MCP 客户端传输为 Streamable HTTP**（`StreamableHttpMcpTransport`，端点 `http://localhost:8082/mcp`）。这是 MCP 2025-03-26 规范引入、当前客户端/服务端普遍采用的传输方式：单一端点、会话靠 `Mcp-Session-Id` 头传递、不再需要 SSE 长连接与心跳保活。旧的 `HttpMcpTransport`（HTTP+SSE 双端点）在 1.0.x 之后仅作兼容保留，本项目已不使用。
+- 版本下限说明：`StreamableHttpMcpTransport` 只在 langchain4j-mcp 1.23.x（beta 线）之后提供，因此本项目把 LangChain4j 从 1.0.1 升到 1.23.0——这是"用主流传输"的必要代价，不是顺手升级。
 - 工单号用内存自增，重启后从 1000 继续，可能与历史数据冲突——生产应换数据库序列/发号器（作为学习讨论点保留）。
 - H2 文件库同进程并发写入有限制，多实例部署需换 MySQL/PostgreSQL。

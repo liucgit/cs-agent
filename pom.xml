@@ -31,7 +31,12 @@
 
     <properties>
         <java.version>17</java.version>
-        <langchain4j.version>1.0.1</langchain4j.version>
+        <!--
+          1.23.0 是当前稳定线最新版；它同时也是「能用 Streamable HTTP 当 MCP 客户端」的最低要求：
+          StreamableHttpMcpTransport 只在 langchain4j-mcp（beta 线，BOM 自动带出 1.23.0-beta33）
+          里才有，1.0.x 的 MCP 客户端只有基于 SSE 的 HttpMcpTransport。
+        -->
+        <langchain4j.version>1.23.0</langchain4j.version>
     </properties>
 
     <!-- ============ LangChain4j ============ -->
@@ -82,7 +87,11 @@
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-ollama</artifactId>
         </dependency>
-        <!-- MCP 客户端：让 Agent 通过 MCP 协议远程调用知识库工具 -->
+        <!--
+          MCP 客户端：让 Agent 通过 MCP 协议远程调用知识库工具。
+          版本由上面的 BOM 统一管理（beta 线，当前 1.23.0-beta33），
+          其中包含 StreamableHttpMcpTransport —— MCP 2025-03-26 起的主流传输。
+        -->
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-mcp</artifactId>
