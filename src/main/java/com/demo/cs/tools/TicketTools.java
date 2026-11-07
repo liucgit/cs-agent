@@ -1,6 +1,7 @@
 package com.demo.cs.tools;
 
 import com.demo.cs.ticket.Ticket;
+import com.demo.cs.ticket.TicketIdGenerator;
 import com.demo.cs.ticket.TicketRepository;
 import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
@@ -10,7 +11,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 工单工具集（Tool Calling / Function Calling 的"工具侧"实现）。
@@ -36,11 +36,12 @@ public class TicketTools {
     private static final Logger log = LoggerFactory.getLogger(TicketTools.class);
 
     private final TicketRepository repository;
-    /** 工单号自增序列（学习项目用内存自增；生产应换成发号器/数据库序列） */
-    private final AtomicLong seq = new AtomicLong(1000);
+    /** 工单号发号器（Redis INCR，重启/多实例安全；Redis 故障时自动降级为进程内自增） */
+    private final TicketIdGenerator idGenerator;
 
-    public TicketTools(TicketRepository repository) {
+    public TicketTools(TicketRepository repository, TicketIdGenerator idGenerator) {
         this.repository = repository;
+        this.idGenerator = idGenerator;
     }
 
     /**
@@ -109,7 +110,7 @@ public class TicketTools {
             pr = "MEDIUM";
         }
 
-        String id = "TCK-" + seq.incrementAndGet();
+        String id = idGenerator.nextId();
         LocalDateTime now = LocalDateTime.now();
         Ticket ticket = new Ticket(id, userId.trim().toUpperCase(),
                 title.trim(), description.trim(), "OPEN", pr, now, now);

@@ -20,4 +20,8 @@ public interface TicketRepository extends JpaRepository<Ticket, String> {
     @Query("select t from Ticket t where lower(t.title) like lower(concat('%', :keyword, '%')) " +
            "or lower(t.description) like lower(concat('%', :keyword, '%')) order by t.createdAt desc")
     List<Ticket> searchByKeyword(@Param("keyword") String keyword);
+
+    /** 全部工单号（发号器初始化水位用：确定当前序列的最大值）。只查 id 一列，不拉整实体 */
+    @Query("select t.id from Ticket t")
+    List<String> findAllTicketIds();
 }
