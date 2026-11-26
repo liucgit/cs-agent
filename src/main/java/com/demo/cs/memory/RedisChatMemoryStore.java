@@ -30,7 +30,7 @@ import java.util.Set;
  * UserMessage/AiMessage/ToolExecutionResultMessage 双向 JSON 化，
  * 保证"工具调用记录"这类结构化消息也能完整还原。</p>
  *
- * <p>★★ 工程亮点（C4 降级路径）★★：Redis 连不上时自动降级为进程内 Map 存储，
+ * <p>★★ 降级路径（C4）★★：Redis 连不上时自动降级为进程内 Map 存储，
  * Agent 功能不中断，只打 WARN 日志。生产里这叫"有损降级"：
  * 可用性优先，重启丢记忆的代价远小于整个客服不可用。</p>
  */

@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
 /**
  * 工单实体（Agent 的 Tool Calling 会直接读写这张表）。
  *
- * <p>特意没用 Lombok：转型学习阶段建议手写 getter/setter，
- * 看清楚 JPA 实体的每个组成部分。</p>
+ * <p>未使用 Lombok：按 JPA 规范手写 getter/setter，避免实体字段与访问器的隐式生成，
+ * 便于静态分析与序列化框架按标准 JavaBean 约定处理。</p>
  */
 @Entity
 @Table(name = "ticket")

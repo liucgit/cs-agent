@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * 工单工具集（Tool Calling / Function Calling 的"工具侧"实现）。
  *
- * <p>★★ Tool Calling 的工作原理（面试必考）★★
+ * <p>★★ Tool Calling 的工作原理 ★★
  * 1. 启动时：LangChain4j 扫描本类所有 @Tool 方法，生成"工具说明书"（名称/描述/参数 JSON Schema）；
  * 2. 对话时：说明书随请求发给 LLM → LLM 判断需要哪个工具 → 返回一个
  *    ToolExecutionRequest（JSON：工具名 + 参数）；

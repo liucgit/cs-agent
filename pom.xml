@@ -2,14 +2,12 @@
 <!--
   智能客服 Agent（Spring Boot + LangChain4j + Redis + MCP）
 
-  给转型同学的话：
-  - 这是「Agent vs 工作流」的样板项目：Agent = LLM(决策) + Tools(改外部世界)
-    + Memory(跨轮次记忆) + Controller(控制流)。本项目的 LLM 决策、工具选择、
-    多轮记忆全部由 LangChain4j 的 AI Services 驱动，你可以清楚看到
-    "Function Calling 是怎么把自然语言变成一次 Java 方法调用的"。
-  - 与项目一的区别：项目一是固定链路的 RAG 工作流；本项目把 RAG(知识库)
-    通过 MCP 协议远程接入，把工单系统通过 Tool Calling 本地接入，
-    LLM 自己决定"该查知识库、该查工单、还是该建工单"。
+  项目定位：
+  - Agent 结构：LLM(决策) + Tools(改外部世界) + Memory(跨轮次记忆) + Controller(控制流)。
+    LLM 决策、工具选择、多轮记忆由 LangChain4j 的 AI Services 驱动，
+    Function Calling 的调用链在代码中可直接追踪。
+  - 与其他项目的区别：本项目把 RAG(知识库) 通过 MCP 协议远程接入，
+    把工单系统通过 Tool Calling 本地接入，由 LLM 决定查询知识库、查询工单还是创建工单。
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
